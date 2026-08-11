@@ -1,14 +1,16 @@
-import { ledgers } from "./mock-data/ledgers";
-import { knowledgeItems } from "./mock-data/knowledge-items";
-import type { ConfidenceLevel, KnowledgeItem } from "./types";
+import type { ConfidenceLevel, KnowledgeItem, Ledger } from "./types";
 
 // ============================================================================
 // Dashboard derived data
 // ============================================================================
-// Nothing here is stored data — everything is *computed* from the existing
-// mock data (ledgers + knowledgeItems). This is deliberate: once the Go
-// backend exists, these functions get replaced by API calls that do the same
-// aggregation server-side. The components that use them don't need to change.
+// Nothing here is stored data — everything is *computed*. These functions
+// used to read the mock data modules directly. Now that items can change at
+// runtime (Add Memory, Import), they take `items`/`ledgers` as arguments
+// instead — usually straight from useKnowledgeStore() — so the same
+// aggregation logic works whether the data came from the static mock file
+// or from something the user just imported. Once the Go backend exists,
+// callers pass in whatever the API returned; the functions themselves don't
+// change.
 // ============================================================================
 
 const CONFIDENCE_SCORE: Record<ConfidenceLevel, number> = {
@@ -18,16 +20,11 @@ const CONFIDENCE_SCORE: Record<ConfidenceLevel, number> = {
 };
 
 /** All knowledge items belonging to a given ledger. */
-export function getItemsForLedger(ledgerId: string): KnowledgeItem[] {
-  return knowledgeItems.filter((item) => item.ledgerId === ledgerId);
+export function getItemsForLedger(items: KnowledgeItem[], ledgerId: string): KnowledgeItem[] {
+  return items.filter((item) => item.ledgerId === ledgerId);
 }
 
-/**
- * Pure scoring function, extracted out of getLedgerConfidence() so pages
- * that hold their own local copy of a ledger's items (e.g. the ledger detail
- * page, after a user adds a memory via the dialog) can recompute the same
- * score without re-reading the global mock data or duplicating the formula.
- */
+/** Pure scoring function so any list of items — a full ledger, a filtered subset — can be scored the same way. */
 export function computeConfidence(items: KnowledgeItem[]): number {
   if (items.length === 0) return 0;
   const total = items.reduce((sum, item) => sum + CONFIDENCE_SCORE[item.confidence], 0);
@@ -39,8 +36,22 @@ export function computeConfidence(items: KnowledgeItem[]): number {
  * confidence level of every knowledge item inside it. This powers the subtle
  * progress indicator on each LedgerCard.
  */
-export function getLedgerConfidence(ledgerId: string): number {
-  return computeConfidence(getItemsForLedger(ledgerId));
+export function getLedgerConfidence(items: KnowledgeItem[], ledgerId: string): number {
+  return computeConfidence(getItemsForLedger(items, ledgerId));
+}
+
+/**
+ * The most recent updatedAt among a ledger's items, formatted for display
+ * elsewhere via formatRelativeDate(). Falls back to the ledger's own
+ * lastUpdated field if it currently has no items.
+ */
+export function getLedgerLastUpdated(items: KnowledgeItem[], ledger: Ledger): string {
+  const ledgerItems = getItemsForLedger(items, ledger.id);
+  if (ledgerItems.length === 0) return ledger.lastUpdated;
+  return ledgerItems.reduce(
+    (latest, item) => (new Date(item.updatedAt) > new Date(latest) ? item.updatedAt : latest),
+    ledgerItems[0].updatedAt
+  );
 }
 
 export interface DashboardStats {
@@ -51,12 +62,12 @@ export interface DashboardStats {
 }
 
 /** The four top-level numbers shown in the Dashboard's summary row. */
-export function getDashboardStats(): DashboardStats {
+export function getDashboardStats(items: KnowledgeItem[], ledgers: Ledger[]): DashboardStats {
   return {
-    totalMemories: knowledgeItems.length,
+    totalMemories: items.length,
     totalCategories: ledgers.length,
-    totalSkills: knowledgeItems.filter((item) => item.type === "skill").length,
-    totalGoals: knowledgeItems.filter((item) => item.type === "goal").length,
+    totalSkills: items.filter((item) => item.type === "skill").length,
+    totalGoals: items.filter((item) => item.type === "goal").length,
   };
 }
 
@@ -75,10 +86,10 @@ export interface ActivityEntry {
  * with the ledger's name/color so the Recent Activity list doesn't have to
  * do its own lookups.
  */
-export function getRecentActivity(limit = 6): ActivityEntry[] {
+export function getRecentActivity(items: KnowledgeItem[], ledgers: Ledger[], limit = 6): ActivityEntry[] {
   const ledgerById = new Map(ledgers.map((ledger) => [ledger.id, ledger]));
 
-  return [...knowledgeItems]
+  return [...items]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, limit)
     .map((item) => {

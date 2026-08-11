@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import type { ConfidenceLevel, KnowledgeItem, KnowledgeItemType } from "@/lib/types";
+import { useSettings } from "@/lib/settings-context";
 import { Button } from "@/components/ui/button";
 
 interface AddMemoryDialogProps {
@@ -35,10 +36,15 @@ const fieldClasses =
  * backend yet, so nothing here persists past a page refresh.
  */
 export function AddMemoryDialog({ open, ledgerId, onClose, onAdd }: AddMemoryDialogProps) {
+  // Settings > Knowledge > "Default confidence behavior" — this is the one
+  // real place that preference is applied: it pre-fills the confidence
+  // field here instead of always starting at a hardcoded value.
+  const { defaultConfidence } = useSettings();
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<KnowledgeItemType>("topic");
-  const [confidence, setConfidence] = useState<ConfidenceLevel>("medium");
+  const [confidence, setConfidence] = useState<ConfidenceLevel>(defaultConfidence);
   const [tagsInput, setTagsInput] = useState("");
 
   if (!open) return null;
@@ -47,7 +53,7 @@ export function AddMemoryDialog({ open, ledgerId, onClose, onAdd }: AddMemoryDia
     setTitle("");
     setDescription("");
     setType("topic");
-    setConfidence("medium");
+    setConfidence(defaultConfidence);
     setTagsInput("");
     onClose();
   };

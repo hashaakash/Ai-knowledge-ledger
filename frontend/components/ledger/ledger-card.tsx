@@ -2,17 +2,20 @@ import Link from "next/link";
 import type { Ledger } from "@/lib/types";
 import { getIcon } from "@/lib/icon-map";
 import { getLedgerColorClasses } from "@/lib/ledger-colors";
-import { getLedgerConfidence, formatRelativeDate } from "@/lib/dashboard-utils";
+import { formatRelativeDate } from "@/lib/dashboard-utils";
 import { Card } from "@/components/ui/card";
 
 interface LedgerCardProps {
   ledger: Ledger;
+  /** Live item count, confidence, and last-updated — computed by the parent from the shared knowledge store, since a ledger's items can now change via Import/Add Memory. */
+  itemCount: number;
+  confidence: number;
+  lastUpdated: string;
 }
 
-export function LedgerCard({ ledger }: LedgerCardProps) {
+export function LedgerCard({ ledger, itemCount, confidence, lastUpdated }: LedgerCardProps) {
   const Icon = getIcon(ledger.icon);
   const colors = getLedgerColorClasses(ledger.color);
-  const confidence = getLedgerConfidence(ledger.id);
 
   return (
     <Link href={`/ledger/${ledger.id}`} className="group block">
@@ -21,7 +24,7 @@ export function LedgerCard({ ledger }: LedgerCardProps) {
           <div className={`flex h-9 w-9 items-center justify-center rounded-md ${colors.iconBg}`}>
             <Icon className={`h-4 w-4 ${colors.iconText}`} />
           </div>
-          <span className="text-xs text-muted-foreground">{ledger.itemCount} memories</span>
+          <span className="text-xs text-muted-foreground">{itemCount} memories</span>
         </div>
 
         <h3 className={`mt-3 text-sm font-semibold tracking-tight transition-colors ${colors.textAccent}`}>
@@ -41,7 +44,7 @@ export function LedgerCard({ ledger }: LedgerCardProps) {
           </div>
           <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
             <span>{confidence}% confidence</span>
-            <span>Updated {formatRelativeDate(ledger.lastUpdated)}</span>
+            <span>Updated {formatRelativeDate(lastUpdated)}</span>
           </div>
         </div>
       </Card>

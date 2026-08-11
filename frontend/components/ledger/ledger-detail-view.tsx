@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import type { ConfidenceLevel, KnowledgeItem, KnowledgeItemType, Ledger } from "@/lib/types";
-import { computeConfidence } from "@/lib/dashboard-utils";
+import { computeConfidence, getItemsForLedger } from "@/lib/dashboard-utils";
+import { useKnowledgeStore } from "@/lib/knowledge-context";
 import { LedgerHeader } from "@/components/ledger/ledger-header";
 import { MemoryList } from "@/components/ledger/memory-list";
 import { MemoryDetail } from "@/components/ledger/memory-detail";
@@ -11,7 +12,6 @@ import { AddMemoryDialog } from "@/components/ledger/add-memory-dialog";
 
 interface LedgerDetailViewProps {
   ledger: Ledger;
-  initialItems: KnowledgeItem[];
 }
 
 const CONFIDENCE_FILTERS: Array<{ label: string; value: ConfidenceLevel | "all" }> = [
@@ -21,12 +21,15 @@ const CONFIDENCE_FILTERS: Array<{ label: string; value: ConfidenceLevel | "all" 
   { label: "Low", value: "low" },
 ];
 
-export function LedgerDetailView({ ledger, initialItems }: LedgerDetailViewProps) {
-  // Local copy of the ledger's items, seeded from mock data. "Add Memory"
-  // appends to this array so the new memory shows up immediately — there's
-  // no backend yet, so this state resets on refresh, which is expected at
-  // this stage of the project.
-  const [items, setItems] = useState(initialItems);
+export function LedgerDetailView({ ledger }: LedgerDetailViewProps) {
+  // Items now come from the shared knowledge store (not a local copy),
+  // filtered down to this ledger. This is what makes an item Imported from
+  // Settings, or added here via "Add Memory", show up consistently on the
+  // Dashboard too — everyone reads from the same place. There's still no
+  // backend, so the store itself resets on refresh, same as before.
+  const { items: allItems, addItem } = useKnowledgeStore();
+  const items = useMemo(() => getItemsForLedger(allItems, ledger.id), [allItems, ledger.id]);
+
   const [search, setSearch] = useState("");
   const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceLevel | "all">("all");
   const [typeFilter, setTypeFilter] = useState<KnowledgeItemType | "all">("all");
@@ -122,7 +125,7 @@ export function LedgerDetailView({ ledger, initialItems }: LedgerDetailViewProps
         open={isAddOpen}
         ledgerId={ledger.id}
         onClose={() => setIsAddOpen(false)}
-        onAdd={(newItem) => setItems((prev) => [newItem, ...prev])}
+        onAdd={addItem}
       />
     </div>
   );

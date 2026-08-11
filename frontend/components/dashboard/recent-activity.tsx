@@ -1,8 +1,23 @@
+import type { KnowledgeItem, Ledger } from "@/lib/types";
 import { getRecentActivity, formatRelativeDate, formatItemType } from "@/lib/dashboard-utils";
 import { Card } from "@/components/ui/card";
 
-export function RecentActivity() {
-  const activity = getRecentActivity(6);
+interface RecentActivityProps {
+  items: KnowledgeItem[];
+  ledgers: Ledger[];
+  limit?: number;
+}
+
+export function RecentActivity({ items, ledgers, limit = 6 }: RecentActivityProps) {
+  const activity = getRecentActivity(items, ledgers, limit);
+
+  if (activity.length === 0) {
+    return (
+      <Card className="px-4 py-6 text-center text-sm text-muted-foreground">
+        Nothing yet — add or import a memory to see activity here.
+      </Card>
+    );
+  }
 
   return (
     <Card className="divide-y">
