@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
-import type { ConfidenceLevel, KnowledgeItem, KnowledgeItemType, Ledger } from "@/lib/types";
+import type { ConfidenceLevel, KnowledgeItemType, Ledger } from "@/lib/types";
 import { computeConfidence, getItemsForLedger } from "@/lib/dashboard-utils";
 import { useKnowledgeStore } from "@/lib/knowledge-context";
 import { LedgerHeader } from "@/components/ledger/ledger-header";
 import { MemoryList } from "@/components/ledger/memory-list";
 import { MemoryDetail } from "@/components/ledger/memory-detail";
 import { AddMemoryDialog } from "@/components/ledger/add-memory-dialog";
+import { EditMemoryDialog } from "@/components/ledger/edit-memory-dialog";
 
 interface LedgerDetailViewProps {
   ledger: Ledger;
@@ -22,22 +23,36 @@ const CONFIDENCE_FILTERS: Array<{ label: string; value: ConfidenceLevel | "all" 
 ];
 
 export function LedgerDetailView({ ledger }: LedgerDetailViewProps) {
-  // Items now come from the shared knowledge store (not a local copy),
-  // filtered down to this ledger. This is what makes an item Imported from
-  // Settings, or added here via "Add Memory", show up consistently on the
-  // Dashboard too — everyone reads from the same place. There's still no
-  // backend, so the store itself resets on refresh, same as before.
-  const { items: allItems, addItem } = useKnowledgeStore();
+  // Items come from the shared knowledge store, filtered to this ledger.
+  // Any Import, Add Memory, Edit, or Delete anywhere in the app is visible
+  // here immediately because everyone reads from the same store.
+  const { items: allItems, evidence, addItem, addEvidence, updateItem, deleteItem } = useKnowledgeStore();
   const items = useMemo(() => getItemsForLedger(allItems, ledger.id), [allItems, ledger.id]);
 
   const [search, setSearch] = useState("");
   const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceLevel | "all">("all");
   const [typeFilter, setTypeFilter] = useState<KnowledgeItemType | "all">("all");
-  const [selectedItem, setSelectedItem] = useState<KnowledgeItem | null>(null);
+  const [tagFilter, setTagFilter] = useState<string | "all">("all");
+
+  // Storing the id (not a snapshot of the item) means the drawer always
+  // reflects the live item from the store — an Edit shows up in the open
+  // drawer immediately, and a Delete makes the drawer close on its own
+  // (the lookup below just returns null once the item is gone).
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const selectedItem = useMemo(
+    () => items.find((item) => item.id === selectedItemId) ?? null,
+    [items, selectedItemId]
+  );
+
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const itemTypesInLedger = useMemo(
     () => Array.from(new Set(items.map((item) => item.type))),
+    [items]
+  );
+  const tagsInLedger = useMemo(
+    () => Array.from(new Set(items.flatMap((item) => item.tags))).sort(),
     [items]
   );
 
@@ -47,13 +62,22 @@ export function LedgerDetailView({ ledger }: LedgerDetailViewProps) {
       const matchesQuery =
         query.length === 0 ||
         item.title.toLowerCase().includes(query) ||
-        item.description.toLowerCase().includes(query) ||
-        item.tags.some((tag) => tag.toLowerCase().includes(query));
+        item.description.toLowerCase().includes(query);
       const matchesConfidence = confidenceFilter === "all" || item.confidence === confidenceFilter;
       const matchesType = typeFilter === "all" || item.type === typeFilter;
-      return matchesQuery && matchesConfidence && matchesType;
+      const matchesTag = tagFilter === "all" || item.tags.includes(tagFilter);
+      return matchesQuery && matchesConfidence && matchesType && matchesTag;
     });
-  }, [items, search, confidenceFilter, typeFilter]);
+  }, [items, search, confidenceFilter, typeFilter, tagFilter]);
+
+  const handleDelete = () => {
+    if (!selectedItem) return;
+    const confirmed = window.confirm(`Delete "${selectedItem.title}"? This can't be undone.`);
+    if (confirmed) {
+      deleteItem(selectedItem.id);
+      setSelectedItemId(null);
+    }
+  };
 
   return (
     <div>
@@ -71,7 +95,7 @@ export function LedgerDetailView({ ledger }: LedgerDetailViewProps) {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search memories..."
+            placeholder="Search title or description..."
             className="w-full rounded-md border bg-background py-1.5 pl-8 pr-3 text-sm outline-none focus:border-foreground/30"
           />
         </div>
@@ -107,6 +131,21 @@ export function LedgerDetailView({ ledger }: LedgerDetailViewProps) {
               ))}
             </select>
           )}
+
+          {tagsInLedger.length > 0 && (
+            <select
+              value={tagFilter}
+              onChange={(e) => setTagFilter(e.target.value)}
+              className="rounded-md border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground outline-none focus:border-foreground/30"
+            >
+              <option value="all">All tags</option>
+              {tagsInLedger.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
@@ -114,18 +153,39 @@ export function LedgerDetailView({ ledger }: LedgerDetailViewProps) {
         <MemoryList
           items={filteredItems}
           hasAnyMemories={items.length > 0}
-          onSelect={setSelectedItem}
+          onSelect={(item) => setSelectedItemId(item.id)}
           onAddMemory={() => setIsAddOpen(true)}
         />
       </div>
 
-      <MemoryDetail item={selectedItem} ledgerName={ledger.name} onClose={() => setSelectedItem(null)} />
+      {/* The drawer is hidden (rather than unmounted) while the edit dialog
+          is open, to avoid two overlapping modal overlays. selectedItemId
+          stays set, so the drawer reappears with the freshly-saved item the
+          moment the edit dialog closes. */}
+      {!isEditOpen && (
+        <MemoryDetail
+          item={selectedItem}
+          ledgerName={ledger.name}
+          evidence={evidence}
+          onClose={() => setSelectedItemId(null)}
+          onEdit={() => setIsEditOpen(true)}
+          onDelete={handleDelete}
+        />
+      )}
+
+      <EditMemoryDialog
+        open={isEditOpen}
+        item={selectedItem}
+        onClose={() => setIsEditOpen(false)}
+        onSave={updateItem}
+      />
 
       <AddMemoryDialog
         open={isAddOpen}
-        ledgerId={ledger.id}
+        defaultLedgerId={ledger.id}
         onClose={() => setIsAddOpen(false)}
         onAdd={addItem}
+        onAddEvidence={addEvidence}
       />
     </div>
   );

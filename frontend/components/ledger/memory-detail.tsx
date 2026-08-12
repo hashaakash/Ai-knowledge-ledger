@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { X } from "lucide-react";
-import type { KnowledgeItem } from "@/lib/types";
+import { Pencil, Trash2, X } from "lucide-react";
+import type { Evidence, KnowledgeItem } from "@/lib/types";
 import { formatItemType, getConfidenceBadgeClasses } from "@/lib/dashboard-utils";
 import { getEvidenceForItem } from "@/lib/ledger-utils";
 import { Button } from "@/components/ui/button";
@@ -10,20 +10,21 @@ import { Button } from "@/components/ui/button";
 interface MemoryDetailProps {
   item: KnowledgeItem | null;
   ledgerName: string;
+  /** Live evidence list from useKnowledgeStore() — this component resolves item.evidenceIds against it. */
+  evidence: Evidence[];
   onClose: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
 /**
  * A right-side detail drawer, built with plain fixed-position divs rather
- * than a shared Sheet/Dialog primitive from components/ui. The project's
+ * than a shared Sheet/Dialog primitive from components/ui — the project's
  * real Base UI Sheet/Dialog components weren't available to inspect when
- * this was written, so this stays fully self-contained to avoid guessing at
- * an API (e.g. `asChild`) that might not exist in the Base UI variant. If
- * you already have a working Sheet component, swapping this markup for it
- * later is a contained change — the props here (`item`, `onClose`) would
- * stay the same.
+ * this was first written, so it stays self-contained to avoid guessing at
+ * an API that might not exist in the Base UI variant.
  */
-export function MemoryDetail({ item, ledgerName, onClose }: MemoryDetailProps) {
+export function MemoryDetail({ item, ledgerName, evidence, onClose, onEdit, onDelete }: MemoryDetailProps) {
   useEffect(() => {
     if (!item) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,7 +36,7 @@ export function MemoryDetail({ item, ledgerName, onClose }: MemoryDetailProps) {
 
   if (!item) return null;
 
-  const evidence = getEvidenceForItem(item);
+  const itemEvidence = getEvidenceForItem(evidence, item);
 
   return (
     <div className="fixed inset-0 z-50">
@@ -83,19 +84,35 @@ export function MemoryDetail({ item, ledgerName, onClose }: MemoryDetailProps) {
             </div>
           </div>
 
-          {evidence.length > 0 && (
+          {itemEvidence.length > 0 && (
             <div className="mt-6">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Evidence</p>
               <div className="mt-2 space-y-3">
-                {evidence.map((entry) => (
+                {itemEvidence.map((entry) => (
                   <div key={entry.id} className="rounded-md border bg-accent/40 p-3">
                     <p className="text-xs leading-relaxed text-foreground">{entry.snippet}</p>
-                    <p className="mt-2 text-[11px] text-muted-foreground">{entry.sourceLabel}</p>
+                    <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span>{entry.sourceLabel}</span>
+                      <span>
+                        {new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
+        </div>
+
+        <div className="flex justify-end gap-2 border-t px-5 py-4">
+          <Button variant="outline" size="sm" onClick={onEdit}>
+            <Pencil className="h-4 w-4" />
+            Edit
+          </Button>
+          <Button variant="outline" size="sm" onClick={onDelete}>
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </Button>
         </div>
       </div>
     </div>

@@ -1,15 +1,14 @@
 import { ledgers } from "./mock-data/ledgers";
-import { evidence } from "./mock-data/evidence";
 import type { Evidence, KnowledgeItem, Ledger } from "./types";
 
 // ============================================================================
 // Ledger detail page lookups
 // ============================================================================
-// These are separate from dashboard-utils.ts on purpose: dashboard-utils.ts
-// holds aggregate/summary logic used by the Dashboard, while this file holds
-// single-record lookups used by the /ledger/[id] page. Same reasoning as
-// before — once there's a Go backend, these become one API call each
-// (GET /ledgers/:id, GET /evidence?ids=...) and nothing calling them changes.
+// Separate from dashboard-utils.ts: that file holds aggregate/summary logic
+// for the Dashboard, this file holds single-record lookups for /ledger/[id].
+// getEvidenceForItem() takes a live evidence array (from useKnowledgeStore())
+// rather than reading the mock module directly, since evidence can now grow
+// at runtime — a new memory can be created with a piece of evidence attached.
 // ============================================================================
 
 export function getLedgerById(id: string): Ledger | undefined {
@@ -17,8 +16,8 @@ export function getLedgerById(id: string): Ledger | undefined {
 }
 
 /** Resolves a KnowledgeItem's evidenceIds into the actual Evidence records. */
-export function getEvidenceForItem(item: KnowledgeItem): Evidence[] {
-  const evidenceById = new Map(evidence.map((entry) => [entry.id, entry]));
+export function getEvidenceForItem(evidenceList: Evidence[], item: KnowledgeItem): Evidence[] {
+  const evidenceById = new Map(evidenceList.map((entry) => [entry.id, entry]));
   return item.evidenceIds
     .map((id) => evidenceById.get(id))
     .filter((entry): entry is Evidence => entry !== undefined);
