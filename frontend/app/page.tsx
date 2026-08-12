@@ -11,6 +11,11 @@ import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { LedgerCard } from "@/components/ledger/ledger-card";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { KnowledgeOverview } from "@/components/dashboard/knowledge-overview";
+import { KnowledgeDistribution } from "@/components/dashboard/knowledge-distribution";
+import { ConfidenceDistribution } from "@/components/dashboard/confidence-distribution";
+import { RecentLearning } from "@/components/dashboard/recent-learning";
+import { NeedsAttention } from "@/components/dashboard/needs-attention";
 import { ImportDialog } from "@/components/data/import-dialog";
 import { Button } from "@/components/ui/button";
 
@@ -65,6 +70,27 @@ export default function DashboardPage() {
             />
           ))}
         </div>
+      </div>
+
+      {/* Knowledge Overview — deeper stats, additive to the summary row above */}
+      <div className="mt-10">
+        <KnowledgeOverview items={items} />
+      </div>
+
+      {/* Type + confidence distribution */}
+      <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <KnowledgeDistribution items={items} />
+        <ConfidenceDistribution items={items} />
+      </div>
+
+      {/* Needs Attention */}
+      <div className="mt-10">
+        <NeedsAttention items={items} ledgers={ledgers} />
+      </div>
+
+      {/* Recent Learning */}
+      <div className="mt-10">
+        <RecentLearning items={items} ledgers={ledgers} limit={6} />
       </div>
 
       {/* Recent activity */}
