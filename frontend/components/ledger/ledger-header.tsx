@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeft, Plus } from "lucide-react";
 import type { Ledger } from "@/lib/types";

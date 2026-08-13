@@ -96,16 +96,18 @@ export function LedgerDetailView({ ledger }: LedgerDetailViewProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search title or description..."
+            aria-label="Search memories by title or description"
             className="w-full rounded-md border bg-background py-1.5 pl-8 pr-3 text-sm outline-none focus:border-foreground/30"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 rounded-md border p-0.5">
+          <div role="group" aria-label="Filter by confidence" className="flex items-center gap-1 rounded-md border p-0.5">
             {CONFIDENCE_FILTERS.map((filter) => (
               <button
                 key={filter.value}
                 onClick={() => setConfidenceFilter(filter.value)}
+                aria-pressed={confidenceFilter === filter.value}
                 className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
                   confidenceFilter === filter.value
                     ? "bg-accent text-foreground"
@@ -121,6 +123,7 @@ export function LedgerDetailView({ ledger }: LedgerDetailViewProps) {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as KnowledgeItemType | "all")}
+              aria-label="Filter by type"
               className="rounded-md border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground outline-none focus:border-foreground/30"
             >
               <option value="all">All types</option>
@@ -136,6 +139,7 @@ export function LedgerDetailView({ ledger }: LedgerDetailViewProps) {
             <select
               value={tagFilter}
               onChange={(e) => setTagFilter(e.target.value)}
+              aria-label="Filter by tag"
               className="rounded-md border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground outline-none focus:border-foreground/30"
             >
               <option value="all">All tags</option>

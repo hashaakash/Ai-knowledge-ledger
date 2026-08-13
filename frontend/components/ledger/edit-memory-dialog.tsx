@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import type { ConfidenceLevel, KnowledgeItem, KnowledgeItemType } from "@/lib/types";
+import { ITEM_TYPES, CONFIDENCE_LEVELS, memoryFieldClasses } from "@/lib/memory-form-constants";
 import { Button } from "@/components/ui/button";
 
 interface EditMemoryDialogProps {
@@ -14,22 +15,6 @@ interface EditMemoryDialogProps {
     updates: Pick<KnowledgeItem, "title" | "description" | "type" | "confidence" | "tags">
   ) => void;
 }
-
-const ITEM_TYPES: KnowledgeItemType[] = [
-  "topic",
-  "skill",
-  "strength",
-  "weakness",
-  "mistake",
-  "preference",
-  "goal",
-  "project",
-];
-
-const CONFIDENCE_LEVELS: ConfidenceLevel[] = ["low", "medium", "high"];
-
-const fieldClasses =
-  "w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30";
 
 /**
  * Edit only covers title/description/type/confidence/tags, per spec — not
@@ -88,9 +73,10 @@ export function EditMemoryDialog({ open, item, onClose, onSave }: EditMemoryDial
 
         <div className="space-y-4 px-5 py-4">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Title</label>
+            <label htmlFor="edit-memory-title" className="text-xs font-medium text-muted-foreground">Title</label>
             <input
-              className={`mt-1 ${fieldClasses}`}
+              id="edit-memory-title"
+              className={`mt-1 ${memoryFieldClasses}`}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
@@ -98,9 +84,10 @@ export function EditMemoryDialog({ open, item, onClose, onSave }: EditMemoryDial
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Description</label>
+            <label htmlFor="edit-memory-description" className="text-xs font-medium text-muted-foreground">Description</label>
             <textarea
-              className={`mt-1 ${fieldClasses} min-h-20 resize-none`}
+              id="edit-memory-description"
+              className={`mt-1 ${memoryFieldClasses} min-h-20 resize-none`}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -108,9 +95,10 @@ export function EditMemoryDialog({ open, item, onClose, onSave }: EditMemoryDial
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Type</label>
+              <label htmlFor="edit-memory-type" className="text-xs font-medium text-muted-foreground">Type</label>
               <select
-                className={`mt-1 ${fieldClasses}`}
+                id="edit-memory-type"
+                className={`mt-1 ${memoryFieldClasses}`}
                 value={type}
                 onChange={(e) => setType(e.target.value as KnowledgeItemType)}
               >
@@ -122,9 +110,10 @@ export function EditMemoryDialog({ open, item, onClose, onSave }: EditMemoryDial
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Confidence</label>
+              <label htmlFor="edit-memory-confidence" className="text-xs font-medium text-muted-foreground">Confidence</label>
               <select
-                className={`mt-1 ${fieldClasses}`}
+                id="edit-memory-confidence"
+                className={`mt-1 ${memoryFieldClasses}`}
                 value={confidence}
                 onChange={(e) => setConfidence(e.target.value as ConfidenceLevel)}
               >
@@ -138,9 +127,10 @@ export function EditMemoryDialog({ open, item, onClose, onSave }: EditMemoryDial
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Tags</label>
+            <label htmlFor="edit-memory-tags" className="text-xs font-medium text-muted-foreground">Tags</label>
             <input
-              className={`mt-1 ${fieldClasses}`}
+              id="edit-memory-tags"
+              className={`mt-1 ${memoryFieldClasses}`}
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
               placeholder="comma, separated, tags"

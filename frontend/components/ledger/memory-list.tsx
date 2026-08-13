@@ -1,3 +1,5 @@
+"use client";
+
 import { Inbox, Plus } from "lucide-react";
 import type { KnowledgeItem } from "@/lib/types";
 import { MemoryCard } from "@/components/ledger/memory-card";

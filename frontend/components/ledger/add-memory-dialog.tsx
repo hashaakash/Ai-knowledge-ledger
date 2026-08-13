@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import type { ConfidenceLevel, Evidence, KnowledgeItem, KnowledgeItemType } from "@/lib/types";
+import { ITEM_TYPES, CONFIDENCE_LEVELS, memoryFieldClasses } from "@/lib/memory-form-constants";
 import { ledgers } from "@/lib/mock-data/ledgers";
 import { useSettings } from "@/lib/settings-context";
 import { Button } from "@/components/ui/button";
@@ -15,22 +16,6 @@ interface AddMemoryDialogProps {
   onAdd: (item: KnowledgeItem) => void;
   onAddEvidence: (entries: Evidence[]) => void;
 }
-
-const ITEM_TYPES: KnowledgeItemType[] = [
-  "topic",
-  "skill",
-  "strength",
-  "weakness",
-  "mistake",
-  "preference",
-  "goal",
-  "project",
-];
-
-const CONFIDENCE_LEVELS: ConfidenceLevel[] = ["low", "medium", "high"];
-
-const fieldClasses =
-  "w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30";
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
@@ -128,9 +113,10 @@ export function AddMemoryDialog({ open, defaultLedgerId, onClose, onAdd, onAddEv
 
         <div className="flex-1 overflow-y-auto space-y-4 px-5 py-4">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Title</label>
+            <label htmlFor="memory-title" className="text-xs font-medium text-muted-foreground">Title</label>
             <input
-              className={`mt-1 ${fieldClasses}`}
+              id="memory-title"
+              className={`mt-1 ${memoryFieldClasses}`}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Comfortable with recursion"
@@ -139,9 +125,10 @@ export function AddMemoryDialog({ open, defaultLedgerId, onClose, onAdd, onAddEv
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Description</label>
+            <label htmlFor="memory-description" className="text-xs font-medium text-muted-foreground">Description</label>
             <textarea
-              className={`mt-1 ${fieldClasses} min-h-20 resize-none`}
+              id="memory-description"
+              className={`mt-1 ${memoryFieldClasses} min-h-20 resize-none`}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What did the AI learn about you here?"
@@ -150,9 +137,10 @@ export function AddMemoryDialog({ open, defaultLedgerId, onClose, onAdd, onAddEv
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Type</label>
+              <label htmlFor="memory-type" className="text-xs font-medium text-muted-foreground">Type</label>
               <select
-                className={`mt-1 ${fieldClasses}`}
+                id="memory-type"
+                className={`mt-1 ${memoryFieldClasses}`}
                 value={type}
                 onChange={(e) => setType(e.target.value as KnowledgeItemType)}
               >
@@ -164,9 +152,10 @@ export function AddMemoryDialog({ open, defaultLedgerId, onClose, onAdd, onAddEv
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Confidence</label>
+              <label htmlFor="memory-confidence" className="text-xs font-medium text-muted-foreground">Confidence</label>
               <select
-                className={`mt-1 ${fieldClasses}`}
+                id="memory-confidence"
+                className={`mt-1 ${memoryFieldClasses}`}
                 value={confidence}
                 onChange={(e) => setConfidence(e.target.value as ConfidenceLevel)}
               >
@@ -180,9 +169,10 @@ export function AddMemoryDialog({ open, defaultLedgerId, onClose, onAdd, onAddEv
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Ledger</label>
+            <label htmlFor="memory-ledger" className="text-xs font-medium text-muted-foreground">Ledger</label>
             <select
-              className={`mt-1 ${fieldClasses}`}
+              id="memory-ledger"
+              className={`mt-1 ${memoryFieldClasses}`}
               value={ledgerId}
               onChange={(e) => setLedgerId(e.target.value)}
             >
@@ -195,9 +185,10 @@ export function AddMemoryDialog({ open, defaultLedgerId, onClose, onAdd, onAddEv
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Tags</label>
+            <label htmlFor="memory-tags" className="text-xs font-medium text-muted-foreground">Tags</label>
             <input
-              className={`mt-1 ${fieldClasses}`}
+              id="memory-tags"
+              className={`mt-1 ${memoryFieldClasses}`}
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
               placeholder="comma, separated, tags"
@@ -216,9 +207,10 @@ export function AddMemoryDialog({ open, defaultLedgerId, onClose, onAdd, onAddEv
             {showEvidence && (
               <div className="mt-3 space-y-3">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Snippet</label>
+                  <label htmlFor="memory-evidence-snippet" className="text-xs font-medium text-muted-foreground">Snippet</label>
                   <textarea
-                    className={`mt-1 ${fieldClasses} min-h-16 resize-none`}
+                    id="memory-evidence-snippet"
+                    className={`mt-1 ${memoryFieldClasses} min-h-16 resize-none`}
                     value={evidenceSnippet}
                     onChange={(e) => setEvidenceSnippet(e.target.value)}
                     placeholder="The excerpt this memory is based on"
@@ -226,19 +218,21 @@ export function AddMemoryDialog({ open, defaultLedgerId, onClose, onAdd, onAddEv
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Source</label>
+                    <label htmlFor="memory-evidence-source" className="text-xs font-medium text-muted-foreground">Source</label>
                     <input
-                      className={`mt-1 ${fieldClasses}`}
+                      id="memory-evidence-source"
+                      className={`mt-1 ${memoryFieldClasses}`}
                       value={evidenceSource}
                       onChange={(e) => setEvidenceSource(e.target.value)}
                       placeholder="e.g. ChatGPT conversation"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Date</label>
+                    <label htmlFor="memory-evidence-date" className="text-xs font-medium text-muted-foreground">Date</label>
                     <input
+                      id="memory-evidence-date"
                       type="date"
-                      className={`mt-1 ${fieldClasses}`}
+                      className={`mt-1 ${memoryFieldClasses}`}
                       value={evidenceDate}
                       onChange={(e) => setEvidenceDate(e.target.value)}
                     />
