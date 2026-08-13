@@ -19,7 +19,7 @@ const selectClasses =
   "rounded-md border bg-background px-2.5 py-1.5 text-xs font-medium outline-none focus:border-foreground/30";
 
 export default function SettingsPage() {
-  const { items, addItems, resetItems } = useKnowledgeStore();
+  const { items, evidence, importItems, resetItems } = useKnowledgeStore();
   const {
     defaultConfidence,
     setDefaultConfidence,
@@ -103,7 +103,7 @@ export default function SettingsPage() {
             </Button>
           </SettingsRow>
           <SettingsRow label="Export as JSON" description="Full data, re-importable into this app.">
-            <Button variant="outline" size="sm" onClick={() => exportAsJSON(items, ledgers)}>
+            <Button variant="outline" size="sm" onClick={() => exportAsJSON(items, ledgers, evidence)}>
               <Download className="h-4 w-4" />
               Export JSON
             </Button>
@@ -126,7 +126,13 @@ export default function SettingsPage() {
         </SettingsSection>
       </div>
 
-      <ImportDialog open={isImportOpen} onClose={() => setIsImportOpen(false)} onImport={addItems} />
+      <ImportDialog
+        open={isImportOpen}
+        existingItems={items}
+        existingEvidence={evidence}
+        onClose={() => setIsImportOpen(false)}
+        onImport={importItems}
+      />
     </AppShell>
   );
 }

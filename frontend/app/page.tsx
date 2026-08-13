@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 // — stats, per-ledger counts/confidence, recent activity — is still
 // *computed*, just from live data instead of a fixed import.
 export default function DashboardPage() {
-  const { items, addItems } = useKnowledgeStore();
+  const { items, evidence, importItems } = useKnowledgeStore();
   const [isImportOpen, setIsImportOpen] = useState(false);
 
   const stats = getDashboardStats(items, ledgers);
@@ -40,7 +40,7 @@ export default function DashboardPage() {
               <Upload className="h-4 w-4" />
               Import Conversations
             </Button>
-            <Button size="sm" onClick={() => exportAsJSON(items, ledgers)}>
+            <Button size="sm" onClick={() => exportAsJSON(items, ledgers, evidence)}>
               <Download className="h-4 w-4" />
               Export Knowledge
             </Button>
@@ -101,7 +101,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <ImportDialog open={isImportOpen} onClose={() => setIsImportOpen(false)} onImport={addItems} />
+      <ImportDialog
+        open={isImportOpen}
+        existingItems={items}
+        existingEvidence={evidence}
+        onClose={() => setIsImportOpen(false)}
+        onImport={importItems}
+      />
     </AppShell>
   );
 }

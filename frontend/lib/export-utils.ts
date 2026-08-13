@@ -1,4 +1,4 @@
-import type { KnowledgeItem, Ledger } from "./types";
+import type { Evidence, KnowledgeItem, Ledger } from "./types";
 import { formatItemType } from "./dashboard-utils";
 
 // ============================================================================
@@ -27,11 +27,12 @@ function timestampForFilename(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function exportAsJSON(items: KnowledgeItem[], ledgers: Ledger[]) {
+export function exportAsJSON(items: KnowledgeItem[], ledgers: Ledger[], evidence: Evidence[]) {
   const payload = {
     exportedAt: new Date().toISOString(),
     ledgers,
     knowledgeItems: items,
+    evidence,
   };
   downloadFile(
     `ai-knowledge-ledger-${timestampForFilename()}.json`,
